@@ -1,0 +1,106 @@
+@model List<StudentPlacementManagement.Models.Student>
+@{
+    var drive = ViewBag.Drive as StudentPlacementManagement.Models.PlacementDrive;
+    ViewData["Title"] = $"Eligible Students - {drive?.JobRole}";
+    var appliedIds = ViewBag.AppliedStudentIds as List<int> ?? new List<int>();
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-action="Details" asp-route-id="@drive?.DriveId" class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i>Drive Details
+                </a>
+            </div>
+            <h2 class="fw-bold text-dark mb-1">Automatically Identified Eligible Students</h2>
+            <p class="text-muted small mb-0">
+                Drive: <strong>@drive?.JobRole</strong> at <strong>@drive?.Company?.CompanyName</strong> &bull;
+                Eligibility: Min CGPA <strong>@drive?.MinCGPA.ToString("F2")</strong> | Max Backlogs: <strong>@drive?.MaxBacklogs</strong>
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-success fs-6 px-3 py-2">
+                <i class="bi bi-person-check-fill me-1"></i> @Model.Count Eligible Candidate(s)
+            </span>
+        </div>
+    </div>
+
+    <div class="modern-card">
+        <div class="table-responsive">
+            <table class="table modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Roll No & Student Name</th>
+                        <th>Department</th>
+                        <th>CGPA</th>
+                        <th>Backlogs</th>
+                        <th>Verified Resume</th>
+                        <th>Application Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var s in Model)
+                        {
+                            var hasApplied = appliedIds.Contains(s.StudentId);
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">@s.FullName</div>
+                                    <small class="text-muted">@s.EnrollmentNo &bull; @s.Email</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@s.Department?.DepartmentCode</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark">@s.CGPA.ToString("F2")</span>
+                                </td>
+                                <td>
+                                    <span class="@(s.Backlogs == 0 ? "text-success fw-bold" : "text-dark")">@s.Backlogs</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(s.ResumePath))
+                                    {
+                                        <a asp-controller="Student" asp-action="DownloadResume" asp-route-id="@s.StudentId" class="btn btn-sm btn-outline-danger py-0 px-2" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i>Resume
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">No Resume</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (hasApplied)
+                                    {
+                                        <span class="status-badge status-applied"><i class="bi bi-check2-circle"></i> Applied</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis">Not Yet Applied</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Student" asp-action="Profile" asp-route-id="@s.StudentId" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                        View Profile
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
+                                No students currently meet the CGPA, backlog, and department criteria for this drive.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

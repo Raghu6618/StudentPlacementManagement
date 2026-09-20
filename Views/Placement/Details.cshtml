@@ -1,0 +1,123 @@
+@model StudentPlacementManagement.Models.Placement
+@{
+    ViewData["Title"] = $"Placement Offer - {Model.Student?.FullName}";
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a asp-action="Index" class="text-muted small text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Placements
+                    </a>
+                    <h2 class="fw-bold text-dark mb-0">Placement Offer Details</h2>
+                </div>
+            </div>
+
+            <!-- Congratulatory Card -->
+            <div class="card border-0 rounded-4 shadow-sm mb-4 p-4 text-center text-white" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                <div class="d-inline-flex p-3 rounded-circle bg-white bg-opacity-10 mx-auto mb-2">
+                    <i class="bi bi-trophy-fill fs-1 text-white"></i>
+                </div>
+                <h3 class="fw-bold mb-1">Campus Placement Confirmed!</h3>
+                <p class="text-light text-opacity-75 small mb-3">Congratulations on the successful campus recruitment selection</p>
+                <div class="d-inline-block bg-white text-dark rounded-pill px-4 py-2 fw-bold fs-5 shadow-sm">
+                    ₹@Model.SalaryPackage.ToString("F2") LPA (CTC)
+                </div>
+            </div>
+
+            <!-- Details Card -->
+            <div class="modern-card mb-4">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title"><i class="bi bi-file-earmark-check text-primary"></i> Placement Record</h5>
+                    <span class="status-badge status-@(Model.Status.ToLower())">@Model.Status</span>
+                </div>
+                <div class="modern-card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Student Name</span>
+                            <span class="fw-bold text-dark fs-6">@Model.Student?.FullName</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Enrollment Number</span>
+                            <span class="fw-bold text-dark fs-6">@Model.Student?.EnrollmentNo</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Academic Department</span>
+                            <span class="fw-semibold text-dark">@Model.Student?.Department?.DepartmentName</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Graduating Batch</span>
+                            <span class="fw-semibold text-dark">@Model.Student?.PassingYear</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Recruiting Company</span>
+                            <span class="fw-bold text-dark fs-6">@Model.Company?.CompanyName</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Designation / Role</span>
+                            <span class="fw-bold text-dark fs-6">@Model.JobRole</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Offer Date</span>
+                            <span class="fw-semibold text-dark">@Model.PlacementDate.ToString("dd MMMM yyyy")</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Anticipated Joining Date</span>
+                            <span class="fw-semibold text-dark">@(Model.JoiningDate.HasValue ? Model.JoiningDate.Value.ToString("dd MMMM yyyy") : "Pending HR Announcement")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Remarks))
+                        {
+                            <div class="col-12 border-top pt-3">
+                                <span class="text-muted small d-block">Remarks / Offer Notes</span>
+                                <p class="text-dark mb-0">@Model.Remarks</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Status Update Form -->
+            @if (isAdmin)
+            {
+                <div class="modern-card">
+                    <div class="modern-card-header">
+                        <h5 class="modern-card-title"><i class="bi bi-gear text-secondary"></i> Update Offer & Joining Status</h5>
+                    </div>
+                    <div class="modern-card-body">
+                        <form asp-action="UpdateStatus" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.PlacementId" />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Offer / Joining Status</label>
+                                    <select name="status" class="form-select">
+                                        <option value="Selected" selected="@(Model.Status == "Selected")">Selected</option>
+                                        <option value="OfferReceived" selected="@(Model.Status == "OfferReceived")">Offer Letter Received</option>
+                                        <option value="Joined" selected="@(Model.Status == "Joined")">Joined Organization</option>
+                                        <option value="NotJoined" selected="@(Model.Status == "NotJoined")">Declined / Not Joined</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Joining Date</label>
+                                    <input type="date" name="joiningDate" value="@(Model.JoiningDate.HasValue ? Model.JoiningDate.Value.ToString("yyyy-MM-dd") : "")" class="form-control" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Remarks</label>
+                                    <input type="text" name="remarks" value="@Model.Remarks" class="form-control" placeholder="Offer tracking notes..." />
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary-custom">Update Placement Record</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,83 @@
+@model List<StudentPlacementManagement.Models.Placement>
+@{
+    ViewData["Title"] = "My Placement Offers";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">My Campus Placement Offers</h2>
+            <p class="text-muted small mb-0">Official confirmation of your job selections and campus placement offers</p>
+        </div>
+        <a asp-controller="Student" asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-4 justify-content-center">
+            @foreach (var offer in Model)
+            {
+                <div class="col-12 col-lg-8">
+                    <!-- Congratulatory Card -->
+                    <div class="card border-0 rounded-4 shadow-sm mb-4 p-4 text-center text-white" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                        <div class="d-inline-flex p-3 rounded-circle bg-white bg-opacity-10 mx-auto mb-2">
+                            <i class="bi bi-award-fill fs-1 text-white"></i>
+                        </div>
+                        <h2 class="fw-bold mb-1">Congratulations!</h2>
+                        <p class="text-light text-opacity-75 mb-3">You have been selected by <strong>@offer.Company?.CompanyName</strong></p>
+                        <div class="d-inline-block bg-white text-dark rounded-pill px-4 py-2 fw-bold fs-4 shadow-sm">
+                            ₹@offer.SalaryPackage.ToString("F2") LPA (CTC)
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-card-header">
+                            <h5 class="modern-card-title"><i class="bi bi-file-earmark-check-fill text-success"></i> Placement Offer Details</h5>
+                            <span class="status-badge status-@(offer.Status.ToLower())">@offer.Status</span>
+                        </div>
+                        <div class="modern-card-body">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <span class="text-muted small d-block">Recruiting Employer</span>
+                                    <span class="fw-bold text-dark fs-5">@offer.Company?.CompanyName</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted small d-block">Job Designation</span>
+                                    <span class="fw-bold text-dark fs-5">@offer.JobRole</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted small d-block">Selection / Offer Date</span>
+                                    <span class="fw-semibold text-dark">@offer.PlacementDate.ToString("dd MMMM yyyy")</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted small d-block">Tentative Joining Date</span>
+                                    <span class="fw-semibold text-dark">@(offer.JoiningDate.HasValue ? offer.JoiningDate.Value.ToString("dd MMMM yyyy") : "To be confirmed by HR")</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(offer.Remarks))
+                                {
+                                    <div class="col-12 border-top pt-3">
+                                        <span class="text-muted small d-block">Coordinator Remarks</span>
+                                        <p class="text-dark mb-0">@offer.Remarks</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="modern-card text-center py-5">
+            <i class="bi bi-award fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">No placement offers yet</h4>
+            <p class="text-muted small mb-3">Keep applying to open drives and attend interview rounds to secure your placement offer.</p>
+            <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-primary px-4 fw-semibold">
+                Explore Placement Drives
+            </a>
+        </div>
+    }
+</div>

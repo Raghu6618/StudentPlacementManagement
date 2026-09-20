@@ -1,0 +1,89 @@
+@model StudentPlacementManagement.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Account Login";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="bg-primary text-white text-center py-4 px-3" style="background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%) !important;">
+                    <div class="d-inline-flex p-3 rounded-circle bg-white bg-opacity-10 mb-2">
+                        <i class="bi bi-mortarboard-fill fs-1 text-white"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Campus Placement Portal</h3>
+                    <p class="text-light text-opacity-75 small mb-0">Sign in to your account to continue</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show small" role="alert">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Login" method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold text-secondary small">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="e.g. admin@placement.edu" required autofocus id="loginEmailInput" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label asp-for="Password" class="form-label fw-semibold text-secondary small">Password</label>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-shield-lock text-muted"></i></span>
+                                <input asp-for="Password" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required id="loginPasswordInput" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label small text-secondary">Remember my session on this device</label>
+                        </div>
+
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm" style="background: #4f46e5; border-color: #4f46e5;">
+                                Sign In <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+
+                        <!-- Demo credentials helper -->
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 0.05em;">Quick Demo Credentials:</div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillCredentials('admin@placement.edu', 'Admin@123')">
+                                    <i class="bi bi-shield-check me-1"></i> Admin Login
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillCredentials('raghu.joshi@student.edu', 'Student@123')">
+                                    <i class="bi bi-mortarboard me-1"></i> Student Login
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="text-center small text-muted">
+                            New student? <a asp-action="Register" class="text-primary fw-bold text-decoration-none">Register for Placement</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillCredentials(email, password) {
+        document.getElementById("loginEmailInput").value = email;
+        document.getElementById("loginPasswordInput").value = password;
+    }
+</script>

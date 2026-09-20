@@ -1,0 +1,291 @@
+@model StudentPlacementManagement.ViewModels.StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Portal";
+}
+
+<div class="container-fluid px-0">
+    <!-- Welcome Header Banner -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 text-white overflow-hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-light small mb-2">
+                        <i class="bi bi-mortarboard-fill"></i> @Model.Student.Department?.DepartmentName (@Model.Student.PassingYear Batch)
+                    </div>
+                    <h2 class="fw-bold display-6 mb-2">Welcome back, @Model.Student.FirstName!</h2>
+                    <p class="text-light text-opacity-75 mb-3" style="max-width: 600px;">
+                        Explore ongoing campus placement drives, track interview rounds, and manage your placement profile.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-4 pt-2">
+                        <div>
+                            <span class="text-light text-opacity-75 small d-block">CGPA</span>
+                            <span class="fs-4 fw-bold">@Model.Student.CGPA.ToString("F2")</span>
+                        </div>
+                        <div class="border-start border-white border-opacity-25 ps-4">
+                            <span class="text-light text-opacity-75 small d-block">Active Backlogs</span>
+                            <span class="fs-4 fw-bold">@Model.Student.Backlogs</span>
+                        </div>
+                        <div class="border-start border-white border-opacity-25 ps-4">
+                            <span class="text-light text-opacity-75 small d-block">Placement Status</span>
+                            @if (Model.Student.PlacementStatus == "Placed")
+                            {
+                                <span class="badge bg-success fs-6 fw-bold mt-1"><i class="bi bi-patch-check-fill me-1"></i> Placed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark fs-6 fw-bold mt-1">Not Placed</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Completion Widget -->
+                <div class="col-lg-4 mt-4 mt-lg-0">
+                    <div class="bg-white bg-opacity-10 p-4 rounded-4 backdrop-blur">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-semibold text-white small">Profile Readiness</span>
+                            <span class="fw-bold text-white fs-5">@Model.ProfileCompletionPercentage%</span>
+                        </div>
+                        <div class="progress custom-progress mb-3">
+                            <div class="progress-bar custom-progress-bar" style="width: @Model.ProfileCompletionPercentage%;"></div>
+                        </div>
+                        @if (Model.ProfileCompletionPercentage < 100)
+                        {
+                            <div class="small text-light text-opacity-75 mb-3">Complete all personal and resume details to qualify for maximum job drives.</div>
+                        }
+                        else
+                        {
+                            <div class="small text-light text-opacity-75 mb-3">Your profile and verified resume are 100% complete!</div>
+                        }
+                        <a asp-action="Profile" class="btn btn-light btn-sm w-100 fw-semibold text-primary">
+                            <i class="bi bi-person-gear me-1"></i> View & Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Available Drives</span>
+                    <div class="stat-icon stat-icon-sky">
+                        <i class="bi bi-briefcase-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.AvailableDrivesCount</div>
+                <div class="stat-subtext">Currently accepting applications</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Applications</span>
+                    <div class="stat-icon stat-icon-indigo">
+                        <i class="bi bi-send-check-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.AppliedDrivesCount</div>
+                <div class="stat-subtext">Submitted by you</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Shortlisted</span>
+                    <div class="stat-icon stat-icon-purple">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.ShortlistedDrivesCount</div>
+                <div class="stat-subtext">Qualified for rounds</div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Final Offers</span>
+                    <div class="stat-icon stat-icon-emerald">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.SelectedDrivesCount</div>
+                <div class="stat-subtext">Placement offers received</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Drives & Recent Applications Rows -->
+    <div class="row g-3 mb-4">
+        <!-- Upcoming Placement Drives -->
+        <div class="col-12 col-lg-7">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-briefcase-fill text-primary"></i> Open Placement Drives For Your Branch
+                    </h5>
+                    <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Explore All</a>
+                </div>
+                <div class="modern-card-body p-3">
+                    @if (Model.UpcomingDrives.Any())
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var drive in Model.UpcomingDrives)
+                            {
+                                <div class="p-3 border rounded-3 bg-light d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <h6 class="fw-bold text-dark mb-0">@drive.JobRole</h6>
+                                            <span class="badge bg-primary-subtle text-primary">₹@drive.SalaryPackage.ToString("F2") LPA</span>
+                                        </div>
+                                        <div class="text-muted small mb-2">
+                                            <strong>@drive.Company?.CompanyName</strong> &bull; Location: @(drive.JobLocation ?? "Pan-India")
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 small text-muted">
+                                            <span><i class="bi bi-award me-1"></i>Min CGPA: <strong>@drive.MinCGPA.ToString("F2")</strong></span>
+                                            <span>&bull;</span>
+                                            <span><i class="bi bi-calendar-x me-1"></i>Deadline: <strong>@drive.ApplicationEndDate.ToString("dd MMM")</strong></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a asp-controller="PlacementDrive" asp-action="Details" asp-route-id="@drive.DriveId" class="btn btn-sm btn-primary px-3 fw-semibold">
+                                            View Details & Apply
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check2-all fs-1 text-success d-block mb-2"></i>
+                            You are all caught up! No new open drives for your department at this moment.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- My Recent Applications -->
+        <div class="col-12 col-lg-5">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-clock-history text-secondary"></i> My Application Status
+                    </h5>
+                    <a asp-controller="Application" asp-action="MyApplications" class="btn btn-sm btn-link text-decoration-none">View All</a>
+                </div>
+                <div class="modern-card-body p-0">
+                    @if (Model.RecentApplications.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var app in Model.RecentApplications)
+                            {
+                                <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark">@app.PlacementDrive?.Company?.CompanyName</div>
+                                        <small class="text-muted">@app.PlacementDrive?.JobRole</small>
+                                        <div class="small text-muted mt-1">Applied: @app.AppliedDate.ToString("dd MMM yyyy")</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="status-badge status-@(app.Status.ToLower())">@app.Status</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            You have not submitted any applications yet.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Interview Schedule & Recent Alerts -->
+    <div class="row g-3">
+        <!-- Upcoming Interviews -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-calendar-event text-info"></i> Upcoming Interview Rounds
+                    </h5>
+                    <a asp-controller="Interview" asp-action="MyInterviews" class="btn btn-sm btn-link text-decoration-none">Full Schedule</a>
+                </div>
+                <div class="modern-card-body p-0">
+                    @if (Model.UpcomingInterviews.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var round in Model.UpcomingInterviews)
+                            {
+                                <li class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="fw-bold text-dark">@round.RoundName (Round #@round.RoundNumber)</div>
+                                            <small class="text-primary fw-semibold">@round.PlacementDrive?.Company?.CompanyName - @round.PlacementDrive?.JobRole</small>
+                                            <p class="small text-muted mt-1 mb-0">@round.Description</p>
+                                        </div>
+                                        <span class="badge bg-info-subtle text-info fw-bold">
+                                            <i class="bi bi-clock me-1"></i>@round.RoundDate.ToString("dd MMM, hh:mm tt") UTC
+                                        </span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            No scheduled interview rounds at present.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-bell text-warning"></i> Recent Placement Alerts
+                    </h5>
+                    <a asp-controller="Notification" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">All Alerts</a>
+                </div>
+                <div class="modern-card-body p-0">
+                    @if (Model.RecentNotifications.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var note in Model.RecentNotifications)
+                            {
+                                <li class="list-group-item p-3 @(!note.IsRead ? "bg-light" : "")">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="fw-semibold text-dark small">@note.Title</div>
+                                        <small class="text-muted">@note.CreatedAt.ToString("dd MMM")</small>
+                                    </div>
+                                    <p class="small text-muted mb-0">@note.Message</p>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">No recent notifications.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

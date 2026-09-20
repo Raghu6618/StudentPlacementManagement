@@ -1,0 +1,65 @@
+@model StudentPlacementManagement.ViewModels.InterviewRoundCreateViewModel
+@{
+    ViewData["Title"] = "Schedule Interview Round";
+}
+
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-calendar-plus-fill text-primary"></i> Schedule Interview Round
+                    </h5>
+                    <a asp-action="Rounds" asp-route-driveId="@Model.DriveId" class="btn btn-sm btn-outline-secondary">Back to Rounds</a>
+                </div>
+                <div class="modern-card-body">
+                    <div class="p-3 bg-light rounded-3 mb-4 small">
+                        <strong>Placement Drive:</strong> @Model.DriveRole <br />
+                        <strong>Hiring Partner:</strong> @Model.CompanyName
+                    </div>
+
+                    <form asp-action="CreateRound" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="DriveId" />
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label asp-for="RoundName" class="form-label small fw-semibold">Round Name <span class="text-danger">*</span></label>
+                                <input asp-for="RoundName" class="form-control" placeholder="e.g. Technical Interview - Coding & Architecture" required />
+                                <span asp-validation-for="RoundName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="RoundNumber" class="form-label small fw-semibold">Round Number <span class="text-danger">*</span></label>
+                                <input asp-for="RoundNumber" type="number" min="1" class="form-control" required />
+                                <span asp-validation-for="RoundNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="RoundDate" class="form-label small fw-semibold">Scheduled Date & Time <span class="text-danger">*</span></label>
+                                <input asp-for="RoundDate" type="datetime-local" class="form-control" required />
+                                <span asp-validation-for="RoundDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input asp-for="IsRequired" class="form-check-input" />
+                                    <label asp-for="IsRequired" class="form-check-label small fw-semibold">Mandatory / Elimination</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label small fw-semibold">Venue / Online Meeting Link / Instructions</label>
+                                <textarea asp-for="Description" rows="3" class="form-control" placeholder="e.g. Lab 304, Academic Block or Google Meet link..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <a asp-action="Rounds" asp-route-driveId="@Model.DriveId" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary-custom px-4">
+                                <i class="bi bi-calendar-check me-1"></i> Confirm & Notify Candidates
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

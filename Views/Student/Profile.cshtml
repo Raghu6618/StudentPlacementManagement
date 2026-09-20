@@ -1,0 +1,200 @@
+@model StudentPlacementManagement.ViewModels.StudentProfileViewModel
+@{
+    ViewData["Title"] = "Student Profile";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Student Placement Profile</h2>
+            <p class="text-muted small mb-0">Review verified academic credentials, personal details, and upload your official resume</p>
+        </div>
+        <div>
+            <a asp-action="EditProfile" asp-route-id="@Model.StudentId" class="btn btn-primary-custom">
+                <i class="bi bi-pencil-square me-1"></i> Edit Details
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Profile Card & Resume -->
+        <div class="col-12 col-lg-4">
+            <!-- Student Summary Card -->
+            <div class="modern-card mb-4 text-center p-4">
+                <div class="user-avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    @Model.FirstName.Substring(0, 1).ToUpper()
+                </div>
+                <h4 class="fw-bold text-dark mb-1">@Model.FullName</h4>
+                <p class="text-muted small mb-2">@Model.EnrollmentNo</p>
+                <div class="mb-3">
+                    @if (Model.PlacementStatus == "Placed")
+                    {
+                        <span class="status-badge status-placed"><i class="bi bi-patch-check-fill"></i> Placed</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-notplaced">Not Placed</span>
+                    }
+                </div>
+
+                <div class="border-top pt-3 text-start">
+                    <div class="d-flex justify-content-between py-1 small">
+                        <span class="text-muted">Department:</span>
+                        <strong class="text-dark">@Model.DepartmentName</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 small">
+                        <span class="text-muted">Passing Year:</span>
+                        <strong class="text-dark">@Model.PassingYear</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 small">
+                        <span class="text-muted">CGPA:</span>
+                        <strong class="text-dark">@Model.CGPA.ToString("F2")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 small">
+                        <span class="text-muted">Backlogs:</span>
+                        <strong class="text-dark">@Model.Backlogs</strong>
+                    </div>
+                </div>
+
+                <!-- Readiness Bar -->
+                <div class="mt-4 pt-3 border-top text-start">
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                        <span class="fw-semibold text-muted">Profile Readiness</span>
+                        <span class="fw-bold text-primary">@Model.ProfileCompletionPercentage%</span>
+                    </div>
+                    <div class="progress custom-progress">
+                        <div class="progress-bar custom-progress-bar" style="width: @Model.ProfileCompletionPercentage%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resume Upload Card -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Placement Resume
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    @if (!string.IsNullOrEmpty(Model.ResumePath))
+                    {
+                        <div class="p-3 bg-light rounded-3 border mb-3 text-center">
+                            <i class="bi bi-file-earmark-check fs-1 text-success d-block mb-1"></i>
+                            <div class="fw-semibold text-dark text-truncate mb-2" title="@Model.ResumeFileName">
+                                @(Model.ResumeFileName ?? "Current_Resume.pdf")
+                            </div>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a asp-action="DownloadResume" asp-route-id="@Model.StudentId" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="bi bi-download me-1"></i> View / Download
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning small mb-3">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> No resume uploaded yet. You cannot apply to drives without a resume.
+                        </div>
+                    }
+
+                    <!-- Upload / Replace Form -->
+                    <form asp-action="UploadResume" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="studentId" value="@Model.StudentId" />
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">
+                                @(string.IsNullOrEmpty(Model.ResumePath) ? "Upload Resume" : "Replace Existing Resume")
+                            </label>
+                            <input type="file" name="resumeFile" class="form-control form-control-sm" accept=".pdf,.doc,.docx" required />
+                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Supported: PDF, DOC, DOCX (Max 5 MB)</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                            <i class="bi bi-cloud-upload me-1"></i> Save Resume
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Academic & Personal Credentials -->
+        <div class="col-12 col-lg-8">
+            <!-- Academic Information -->
+            <div class="modern-card mb-4">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-mortarboard text-primary"></i> Academic Credentials
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Enrollment Number</span>
+                            <span class="fw-bold text-dark fs-6">@Model.EnrollmentNo</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Department / Branch</span>
+                            <span class="fw-bold text-dark fs-6">@Model.DepartmentName</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Graduation Year</span>
+                            <span class="fw-bold text-dark fs-6">@Model.PassingYear</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Cumulative GPA (CGPA)</span>
+                            <span class="fw-bold text-dark fs-6">@Model.CGPA.ToString("F2") / 10.00</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Active Backlogs</span>
+                            <span class="fw-bold text-dark fs-6">@Model.Backlogs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-person text-secondary"></i> Personal Information & Contact
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Full Name</span>
+                            <span class="fw-semibold text-dark">@Model.FullName</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Gender</span>
+                            <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(Model.Gender) ? "Not Specified" : Model.Gender)</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Date of Birth</span>
+                            <span class="fw-semibold text-dark">@(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd MMMM yyyy") : "Not Specified")</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Primary Email</span>
+                            <span class="fw-semibold text-dark">@Model.Email</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Contact Phone</span>
+                            <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(Model.Phone) ? "Not Specified" : Model.Phone)</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Location</span>
+                            <span class="fw-semibold text-dark">
+                                @(string.IsNullOrEmpty(Model.City) ? "" : Model.City + ", ") @Model.State
+                            </span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block">Residential Address</span>
+                            <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(Model.Address) ? "Not Specified" : Model.Address)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

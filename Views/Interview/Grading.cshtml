@@ -1,0 +1,102 @@
+@model StudentPlacementManagement.ViewModels.RoundGradingViewModel
+@{
+    ViewData["Title"] = $"Evaluation - {Model.Round.RoundName}";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-action="Rounds" asp-route-driveId="@Model.Round.DriveId" class="text-muted small text-decoration-none">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Rounds
+                </a>
+            </div>
+            <h2 class="fw-bold text-dark mb-1">Candidate Grading & Results Entry</h2>
+            <p class="text-muted small mb-0">
+                Round #@Model.Round.RoundNumber: <strong>@Model.Round.RoundName</strong> &bull;
+                @Model.Round.PlacementDrive?.Company?.CompanyName - @Model.Round.PlacementDrive?.JobRole
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6 px-3 py-2">
+                @Model.Candidates.Count Assigned Candidate(s)
+            </span>
+        </div>
+    </div>
+
+    <div class="modern-card">
+        <div class="table-responsive">
+            <table class="table modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Roll No & Candidate</th>
+                        <th>Department</th>
+                        <th>CGPA / Resume</th>
+                        <th>Evaluation Status</th>
+                        <th>Score</th>
+                        <th>Remarks / Feedback</th>
+                        <th class="text-end">Save</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Candidates.Any())
+                    {
+                        foreach (var c in Model.Candidates)
+                        {
+                            <tr>
+                                <form asp-action="UpdateResult" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="roundResultId" value="@c.RoundResultId" />
+
+                                    <td>
+                                        <div class="fw-bold text-dark">@c.StudentName</div>
+                                        <small class="text-muted">@c.EnrollmentNo</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@c.DepartmentName</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-dark">@c.CGPA.ToString("F2")</span>
+                                        @if (!string.IsNullOrEmpty(c.ResumePath))
+                                        {
+                                            <a asp-controller="Student" asp-action="DownloadResume" asp-route-id="@c.StudentId" class="badge bg-danger-subtle text-danger text-decoration-none ms-1" target="_blank">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                            </a>
+                                        }
+                                    </td>
+                                    <td style="min-width: 140px;">
+                                        <select name="status" class="form-select form-select-sm">
+                                            <option value="Pending" selected="@(c.Status == "Pending")">Pending</option>
+                                            <option value="Passed" selected="@(c.Status == "Passed")">Passed (Qualified)</option>
+                                            <option value="Failed" selected="@(c.Status == "Failed")">Failed</option>
+                                            <option value="Absent" selected="@(c.Status == "Absent")">Absent</option>
+                                        </select>
+                                    </td>
+                                    <td style="width: 110px;">
+                                        <input type="number" step="0.1" min="0" max="100" name="score" value="@(c.Score.HasValue ? c.Score.Value.ToString("F1") : "")" class="form-control form-control-sm" placeholder="Score/100" />
+                                    </td>
+                                    <td style="min-width: 180px;">
+                                        <input type="text" name="remarks" value="@c.Remarks" class="form-control form-control-sm" placeholder="Feedback notes..." />
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="submit" class="btn btn-sm btn-primary-custom px-3" title="Update candidate score and notify">
+                                            <i class="bi bi-check2"></i> Save
+                                        </button>
+                                    </td>
+                                </form>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                No candidate results found for this interview round.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

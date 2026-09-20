@@ -1,0 +1,87 @@
+@model List<StudentPlacementManagement.ViewModels.ApplicationViewModel>
+@{
+    ViewData["Title"] = "My Applications";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">My Campus Applications</h2>
+            <p class="text-muted small mb-0">Track application statuses, shortlisting progress, and company remarks</p>
+        </div>
+        <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-primary-custom">
+            <i class="bi bi-briefcase me-1"></i> Explore More Drives
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-3">
+            @foreach (var app in Model)
+            {
+                <div class="col-12 col-lg-6">
+                    <div class="modern-card h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="status-badge status-@(app.Status.ToLower()) mb-2">@app.Status</span>
+                                <h5 class="fw-bold text-dark mb-0">@app.JobRole</h5>
+                                <div class="text-primary fw-semibold small">@app.CompanyName</div>
+                            </div>
+                            <span class="badge bg-success-subtle text-success fs-6 fw-bold">
+                                ₹@app.SalaryPackage.ToString("F2") LPA
+                            </span>
+                        </div>
+
+                        <div class="bg-light p-3 rounded-3 mb-3 small">
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span><i class="bi bi-send me-1"></i>Submitted On:</span>
+                                <strong class="text-dark">@app.AppliedDate.ToString("dd MMM yyyy, hh:mm tt") UTC</strong>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span><i class="bi bi-calendar-event me-1"></i>Drive Date:</span>
+                                <strong class="text-dark">@app.DriveDate.ToString("dd MMM yyyy")</strong>
+                            </div>
+                            @if (!string.IsNullOrEmpty(app.Remarks))
+                            {
+                                <div class="d-flex justify-content-between py-1 text-muted border-top mt-1 pt-1">
+                                    <span><i class="bi bi-chat-quote me-1"></i>Coordinator Remarks:</span>
+                                    <strong class="text-dark">@app.Remarks</strong>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <a asp-controller="PlacementDrive" asp-action="Details" asp-route-id="@app.DriveId" class="btn btn-sm btn-outline-secondary">
+                                Drive Overview
+                            </a>
+
+                            @if (app.Status == "Shortlisted")
+                            {
+                                <a asp-controller="Interview" asp-action="MyInterviews" class="btn btn-sm btn-outline-primary fw-semibold">
+                                    <i class="bi bi-calendar-check me-1"></i> View Interview Rounds
+                                </a>
+                            }
+                            else if (app.Status == "Selected")
+                            {
+                                <a asp-controller="Placement" asp-action="MyOffer" class="btn btn-sm btn-success fw-bold">
+                                    <i class="bi bi-trophy-fill me-1"></i> View Offer Details
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="modern-card text-center py-5">
+            <i class="bi bi-send-x fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">No applications submitted yet</h4>
+            <p class="text-muted small mb-3">Browse open drives and submit your verified student resume to begin.</p>
+            <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-primary px-4 fw-semibold">
+                Explore Placement Drives
+            </a>
+        </div>
+    }
+</div>

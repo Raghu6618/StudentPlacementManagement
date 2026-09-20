@@ -1,0 +1,256 @@
+@model StudentPlacementManagement.ViewModels.PlacementDriveDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.Drive.JobRole} - {Model.Drive.Company?.CompanyName}";
+    var isAdmin = User.IsInRole("Admin");
+    var isStudent = User.IsInRole("Student");
+}
+
+<div class="container-fluid px-0">
+    <!-- Header with Breadcrumb and Actions -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-action="Index" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left me-1"></i>Drives</a>
+                <span class="text-muted small">/</span>
+                <span class="text-primary small fw-semibold">@Model.Drive.Company?.CompanyName</span>
+            </div>
+            <h2 class="fw-bold text-dark mb-0">@Model.Drive.JobRole</h2>
+            <div class="text-muted small">
+                <i class="bi bi-buildings me-1"></i>@Model.Drive.Company?.CompanyName &bull;
+                <i class="bi bi-geo-alt me-1"></i>@(Model.Drive.JobLocation ?? "Multiple Locations") &bull;
+                <span class="status-badge status-@(Model.Drive.Status.ToLower()) ms-1">@Model.Drive.Status</span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (isAdmin)
+            {
+                <a asp-action="EligibleStudents" asp-route-id="@Model.Drive.DriveId" class="btn btn-outline-success">
+                    <i class="bi bi-person-check me-1"></i> View Eligible Students (@Model.EligibleStudentsCount)
+                </a>
+                <a asp-controller="Interview" asp-action="Rounds" asp-route-driveId="@Model.Drive.DriveId" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar-check me-1"></i> Interview Rounds (@Model.InterviewRounds.Count)
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Drive.DriveId" class="btn btn-primary-custom">
+                    <i class="bi bi-pencil me-1"></i> Edit Drive
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Student Eligibility and Application Action Box -->
+    @if (isStudent)
+    {
+        @if (Model.HasAlreadyApplied && Model.ExistingApplication != null)
+        {
+            <div class="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-white rounded-circle shadow-sm text-info">
+                        <i class="bi bi-send-check-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Application Submitted!</h5>
+                        <p class="mb-0 text-muted small">
+                            You applied for this drive on <strong>@Model.ExistingApplication.AppliedDate.ToString("dd MMMM yyyy, hh:mm tt") UTC</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <span class="fs-6 status-badge status-@(Model.ExistingApplication.Status.ToLower()) px-3 py-2">
+                        Status: @Model.ExistingApplication.Status
+                    </span>
+                </div>
+            </div>
+        }
+        else if (Model.UserEligibility != null)
+        {
+            if (Model.UserEligibility.IsEligible)
+            {
+                <div class="eligibility-banner eligible shadow-sm p-4 rounded-4 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-success text-white rounded-circle">
+                            <i class="bi bi-check-lg fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-success mb-1">You Are Eligible to Apply!</h5>
+                            <p class="mb-0 small text-dark">@Model.UserEligibility.Reason</p>
+                        </div>
+                    </div>
+                    <div>
+                        <form asp-controller="Application" asp-action="Apply" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="driveId" value="@Model.Drive.DriveId" />
+                            <button type="submit" class="btn btn-success btn-lg fw-bold px-4 shadow-sm" onclick="return confirm('Confirm submitting your verified profile and resume to @Model.Drive.Company?.CompanyName?');">
+                                <i class="bi bi-send-fill me-2"></i> Apply for this Drive
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="eligibility-banner not-eligible shadow-sm p-4 rounded-4 mb-4 d-flex align-items-center gap-3">
+                    <div class="p-3 bg-danger text-white rounded-circle">
+                        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-danger mb-1">Not Eligible to Apply</h5>
+                        <p class="mb-0 small text-dark">@Model.UserEligibility.Reason</p>
+                    </div>
+                </div>
+            }
+        }
+    }
+
+    <!-- Main Content Layout -->
+    <div class="row g-4">
+        <!-- Left: Job Details & Description -->
+        <div class="col-12 col-lg-8">
+            <!-- Job Description Card -->
+            <div class="modern-card mb-4">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title"><i class="bi bi-card-text text-primary"></i> Job Role Overview & Responsibilities</h5>
+                </div>
+                <div class="modern-card-body">
+                    <div class="text-dark" style="white-space: pre-line; line-height: 1.7;">
+                        @Model.Drive.JobDescription
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Drive.RequiredSkills))
+                    {
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-dark small text-uppercase">Desired Technical Skills:</h6>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                @foreach (var skill in Model.Drive.RequiredSkills.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="badge bg-light text-dark border px-3 py-2" style="font-weight: 500;">
+                                        <i class="bi bi-check2 text-primary me-1"></i>@skill.Trim()
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Scheduled Interview Rounds Card -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title"><i class="bi bi-diagram-2 text-primary"></i> Recruitment & Interview Rounds</h5>
+                    @if (isAdmin)
+                    {
+                        <a asp-controller="Interview" asp-action="CreateRound" asp-route-driveId="@Model.Drive.DriveId" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus me-1"></i> Add Round
+                        </a>
+                    }
+                </div>
+                <div class="modern-card-body p-0">
+                    @if (Model.InterviewRounds.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var round in Model.InterviewRounds)
+                            {
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-primary-subtle text-primary mb-1">Round @round.RoundNumber</span>
+                                            <h6 class="fw-bold text-dark mb-1">@round.RoundName</h6>
+                                            <p class="small text-muted mb-0">@(round.Description ?? "No round description provided.")</p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="small fw-semibold text-dark">
+                                                <i class="bi bi-clock me-1 text-primary"></i>@round.RoundDate.ToString("dd MMM yyyy, hh:mm tt") UTC
+                                            </div>
+                                            @if (round.IsRequired)
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger" style="font-size: 0.7rem;">Elimination Round</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            Interview rounds will be published by the recruitment coordinator soon.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Key Criteria & Schedule Box -->
+        <div class="col-12 col-lg-4">
+            <!-- Salary & Offer Card -->
+            <div class="modern-card mb-4 text-center p-4 bg-primary text-white" style="background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%) !important;">
+                <span class="text-light text-opacity-75 small text-uppercase fw-semibold" style="letter-spacing: 0.05em;">Annual Compensation Package</span>
+                <h1 class="fw-bold display-5 my-2">₹@Model.Drive.SalaryPackage.ToString("F2")</h1>
+                <span class="badge bg-white text-primary fw-bold px-3 py-1">Lakhs Per Annum (CTC)</span>
+                <div class="mt-3 text-light text-opacity-75 small">
+                    Employment Type: <strong>@Model.Drive.EmploymentType</strong>
+                </div>
+            </div>
+
+            <!-- Eligibility Rules Card -->
+            <div class="modern-card mb-4">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title"><i class="bi bi-shield-check text-success"></i> Eligibility Criteria</h5>
+                </div>
+                <div class="modern-card-body">
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-3 small">
+                        <li class="d-flex justify-content-between pb-2 border-bottom">
+                            <span class="text-muted">Minimum CGPA Required:</span>
+                            <strong class="text-dark">@Model.Drive.MinCGPA.ToString("F2")</strong>
+                        </li>
+                        <li class="d-flex justify-content-between pb-2 border-bottom">
+                            <span class="text-muted">Max Active Backlogs:</span>
+                            <strong class="text-dark">@Model.Drive.MaxBacklogs</strong>
+                        </li>
+                        <li class="d-flex justify-content-between pb-2 border-bottom">
+                            <span class="text-muted">Eligible Passing Year:</span>
+                            <strong class="text-dark">@Model.Drive.PassingYear</strong>
+                        </li>
+                        <li>
+                            <span class="text-muted d-block mb-1">Eligible Academic Branches:</span>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var dd in Model.Drive.DriveDepartments)
+                                {
+                                    <span class="badge bg-primary text-white">@dd.Department?.DepartmentCode</span>
+                                }
+                            </div>
+                        </li>
+                        @if (!string.IsNullOrEmpty(Model.Drive.EligibilityDescription))
+                        {
+                            <li class="pt-2 border-top text-muted">
+                                <strong>Special Conditions:</strong> @Model.Drive.EligibilityDescription
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Important Dates Card -->
+            <div class="modern-card">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title"><i class="bi bi-calendar-range text-info"></i> Timeline & Deadlines</h5>
+                </div>
+                <div class="modern-card-body small">
+                    <div class="mb-3">
+                        <span class="text-muted d-block">Applications Open:</span>
+                        <strong class="text-dark">@Model.Drive.ApplicationStartDate.ToString("dd MMM yyyy, hh:mm tt") UTC</strong>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted d-block">Application Deadline:</span>
+                        <strong class="text-danger">@Model.Drive.ApplicationEndDate.ToString("dd MMM yyyy, hh:mm tt") UTC</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted d-block">Official Drive Date:</span>
+                        <strong class="text-primary">@Model.Drive.DriveDate.ToString("dd MMMM yyyy")</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,97 @@
+@model StudentPlacementManagement.Models.PlacementDrive
+@{
+    ViewData["Title"] = $"Interview Rounds - {Model.JobRole}";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a asp-controller="PlacementDrive" asp-action="Details" asp-route-id="@Model.DriveId" class="text-muted small text-decoration-none">
+                    <i class="bi bi-arrow-left me-1"></i>Drive Details
+                </a>
+            </div>
+            <h2 class="fw-bold text-dark mb-1">Interview Rounds & Assessment</h2>
+            <p class="text-muted small mb-0">
+                Drive: <strong>@Model.JobRole</strong> at <strong>@Model.Company?.CompanyName</strong>
+            </p>
+        </div>
+        <div>
+            <a asp-action="CreateRound" asp-route-driveId="@Model.DriveId" class="btn btn-primary-custom">
+                <i class="bi bi-plus-circle me-1"></i> Schedule Interview Round
+            </a>
+        </div>
+    </div>
+
+    @if (Model.InterviewRounds.Any())
+    {
+        <div class="row g-3">
+            @foreach (var round in Model.InterviewRounds.OrderBy(r => r.RoundNumber))
+            {
+                var candidatesCount = round.RoundResults.Count;
+                var passedCount = round.RoundResults.Count(rr => rr.Status == "Passed");
+                var failedCount = round.RoundResults.Count(rr => rr.Status == "Failed");
+                var pendingCount = round.RoundResults.Count(rr => rr.Status == "Pending");
+
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="modern-card h-100 d-flex flex-column">
+                        <div class="modern-card-header">
+                            <span class="badge bg-primary text-white">Round @round.RoundNumber</span>
+                            @if (round.IsRequired)
+                            {
+                                <span class="badge bg-danger-subtle text-danger" style="font-size: 0.7rem;">Mandatory</span>
+                            }
+                        </div>
+                        <div class="modern-card-body flex-grow-1">
+                            <h5 class="fw-bold text-dark mb-2">@round.RoundName</h5>
+                            <p class="text-muted small mb-3">
+                                @(string.IsNullOrEmpty(round.Description) ? "No round description provided." : round.Description)
+                            </p>
+
+                            <div class="bg-light p-3 rounded-3 mb-3 small">
+                                <div class="d-flex justify-content-between py-1 text-muted">
+                                    <span><i class="bi bi-calendar-event me-1"></i>Date & Time:</span>
+                                    <strong class="text-dark">@round.RoundDate.ToString("dd MMM yyyy, hh:mm tt") UTC</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 text-muted">
+                                    <span><i class="bi bi-people me-1"></i>Assigned Candidates:</span>
+                                    <strong class="text-primary">@candidatesCount</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 text-muted">
+                                    <span><i class="bi bi-check-circle text-success me-1"></i>Passed:</span>
+                                    <strong class="text-success">@passedCount</strong>
+                                </div>
+                                <div class="d-flex justify-content-between py-1 text-muted">
+                                    <span><i class="bi bi-clock-history text-warning me-1"></i>Pending:</span>
+                                    <strong class="text-warning">@pendingCount</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                            <a asp-action="Grading" asp-route-roundId="@round.RoundId" class="btn btn-sm btn-primary fw-semibold px-3">
+                                <i class="bi bi-pencil-square me-1"></i> Evaluate Candidates
+                            </a>
+                            <form asp-action="DeleteRound" asp-route-id="@round.RoundId" method="post" onsubmit="return confirm('Delete this interview round?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Round">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="modern-card text-center py-5">
+            <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">No interview rounds defined yet</h4>
+            <p class="text-muted small mb-3">Schedule interview rounds (e.g. Aptitude Test, Technical Interview, HR Round) for this drive.</p>
+            <a asp-action="CreateRound" asp-route-driveId="@Model.DriveId" class="btn btn-primary px-4 fw-semibold">
+                <i class="bi bi-plus-circle me-1"></i> Schedule First Round
+            </a>
+        </div>
+    }
+</div>

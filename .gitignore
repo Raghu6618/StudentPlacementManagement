@@ -1,0 +1,16 @@
+## Ignore Visual Studio / .NET temporary and build files
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Ignore build logs
+*.log
+
+## App data/temporary database files
+# SQLite database files can be ignored or included as needed; keeping sample db schema
+*.db-shm
+*.db-wal

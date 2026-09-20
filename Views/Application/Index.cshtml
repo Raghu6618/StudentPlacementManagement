@@ -1,0 +1,217 @@
+@model StudentPlacementManagement.ViewModels.ApplicationFilterViewModel
+@{
+    ViewData["Title"] = "Candidate Applications";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Student Job Applications</h2>
+            <p class="text-muted small mb-0">Review student submissions, shortlist applicants, record rejection reasons, and declare final selections</p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6 px-3 py-2">
+                <i class="bi bi-file-earmark-person-fill me-1"></i> Total Applications: @Model.TotalItems
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="modern-card mb-4">
+        <div class="modern-card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-12 col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search student or roll no..." value="@Model.SearchTerm" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <select name="driveId" class="form-select">
+                        <option value="">-- All Placement Drives --</option>
+                        @foreach (var d in (IEnumerable<SelectListItem>)ViewBag.Drives)
+                        {
+                            <option value="@d.Value" selected="@(Model.DriveId?.ToString() == d.Value)">@d.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <select name="departmentId" class="form-select">
+                        <option value="">-- Department --</option>
+                        @foreach (var dept in (IEnumerable<SelectListItem>)ViewBag.Departments)
+                        {
+                            <option value="@dept.Value" selected="@(Model.DepartmentId?.ToString() == dept.Value)">@dept.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">-- Status --</option>
+                        <option value="Applied" selected="@(Model.Status == "Applied")">Applied</option>
+                        <option value="UnderReview" selected="@(Model.Status == "UnderReview")">Under Review</option>
+                        <option value="Shortlisted" selected="@(Model.Status == "Shortlisted")">Shortlisted</option>
+                        <option value="Rejected" selected="@(Model.Status == "Rejected")">Rejected</option>
+                        <option value="Selected" selected="@(Model.Status == "Selected")">Selected (Placed)</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-primary-custom w-100">Filter</button>
+                    <a asp-action="Index" class="btn btn-light border" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="modern-card">
+        <div class="table-responsive">
+            <table class="table modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Academic Info</th>
+                        <th>Applied Drive & Company</th>
+                        <th>Package</th>
+                        <th>Submission Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Applications.Any())
+                    {
+                        foreach (var app in Model.Applications)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">@app.StudentName</div>
+                                    <small class="text-muted">@app.EnrollmentNo</small>
+                                    @if (!string.IsNullOrEmpty(app.ResumePath))
+                                    {
+                                        <a asp-controller="Student" asp-action="DownloadResume" asp-route-id="@app.StudentId" class="badge bg-danger-subtle text-danger text-decoration-none ms-1" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i> Resume
+                                        </a>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@app.DepartmentName</span>
+                                    <small class="d-block text-muted">CGPA: <strong>@app.StudentCGPA.ToString("F2")</strong> | Backlogs: @app.StudentBacklogs</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@app.JobRole</div>
+                                    <small class="text-muted">@app.CompanyName</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">₹@app.SalaryPackage.ToString("F2") LPA</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@app.AppliedDate.ToString("dd MMM yyyy, hh:mm tt") UTC</small>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-@(app.Status.ToLower())">@app.Status</span>
+                                    @if (!string.IsNullOrEmpty(app.Remarks))
+                                    {
+                                        <small class="d-block text-muted text-truncate" style="max-width: 140px;" title="@app.Remarks">@app.Remarks</small>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <!-- Button to open update status modal -->
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateModal_@app.ApplicationId">
+                                        Update Status
+                                    </button>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade text-start" id="updateModal_@app.ApplicationId" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form asp-action="UpdateStatus" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="applicationId" value="@app.ApplicationId" />
+
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Update Application Status</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="p-3 bg-light rounded-3 mb-3 small">
+                                                            <div><strong>Student:</strong> @app.StudentName (@app.EnrollmentNo)</div>
+                                                            <div><strong>Drive:</strong> @app.JobRole at @app.CompanyName</div>
+                                                            <div><strong>Current Status:</strong> <span class="badge bg-secondary">@app.Status</span></div>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-semibold">Select New Stage / Status <span class="text-danger">*</span></label>
+                                                            <select name="newStatus" class="form-select status-selector" id="select_status_@app.ApplicationId" required onchange="handleStatusChange('@app.ApplicationId', this.value)">
+                                                                <option value="UnderReview" selected="@(app.Status == "UnderReview")">Under Review</option>
+                                                                <option value="Shortlisted" selected="@(app.Status == "Shortlisted")">Shortlisted (Move to Interview Rounds)</option>
+                                                                <option value="Rejected" selected="@(app.Status == "Rejected")">Rejected</option>
+                                                                <option value="Selected" selected="@(app.Status == "Selected")">🎉 Selected (Create Official Placement Offer)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Conditional Placement Fields if Selected -->
+                                                        <div id="selection_fields_@app.ApplicationId" style="display: @(app.Status == "Selected" ? "block" : "none");" class="p-3 bg-success bg-opacity-10 rounded-3 mb-3 border border-success border-opacity-25">
+                                                            <h6 class="fw-bold text-success small mb-2"><i class="bi bi-patch-check-fill me-1"></i> Final Selection Parameters</h6>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small fw-semibold">Offered Package (CTC ₹ LPA)</label>
+                                                                <input type="number" step="0.01" name="packageOffered" value="@app.SalaryPackage" class="form-control form-control-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label class="form-label small fw-semibold">Anticipated Joining Date</label>
+                                                                <input type="date" name="joiningDate" class="form-control form-control-sm" />
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-semibold">Remarks / Feedback</label>
+                                                            <textarea name="remarks" rows="2" class="form-control small" placeholder="e.g. Excellent performance in technical interview...">@app.Remarks</textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary btn-sm fw-semibold">Confirm Status Update</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-file-earmark-x fs-1 text-muted d-block mb-2"></i>
+                                No student applications found matching the filter criteria.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                <div class="small text-muted">Page @Model.PageNumber of @Model.TotalPages</div>
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = p, driveId = Model.DriveId, companyId = Model.CompanyId, departmentId = Model.DepartmentId, status = Model.Status, search = Model.SearchTerm })">@p</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    function handleStatusChange(appId, val) {
+        const fields = document.getElementById("selection_fields_" + appId);
+        if (fields) {
+            fields.style.display = (val === "Selected") ? "block" : "none";
+        }
+    }
+</script>

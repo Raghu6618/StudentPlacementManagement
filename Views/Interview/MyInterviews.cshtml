@@ -1,0 +1,86 @@
+@model List<StudentPlacementManagement.Models.InterviewRound>
+@{
+    ViewData["Title"] = "My Interview Schedule";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">My Interview Schedule & Results</h2>
+            <p class="text-muted small mb-0">Upcoming campus assessments, interview round details, and published evaluation scores</p>
+        </div>
+        <a asp-controller="Application" asp-action="MyApplications" class="btn btn-outline-secondary">
+            <i class="bi bi-file-text me-1"></i> My Applications
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row g-3">
+            @foreach (var round in Model)
+            {
+                var result = round.RoundResults.FirstOrDefault();
+
+                <div class="col-12 col-lg-6">
+                    <div class="modern-card h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary text-white mb-1">Round @round.RoundNumber</span>
+                                <h5 class="fw-bold text-dark mb-0">@round.RoundName</h5>
+                                <div class="text-primary fw-semibold small">
+                                    @round.PlacementDrive?.Company?.CompanyName - @round.PlacementDrive?.JobRole
+                                </div>
+                            </div>
+                            @if (result != null)
+                            {
+                                <span class="status-badge status-@(result.Status.ToLower())">
+                                    @result.Status
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary">Scheduled</span>
+                            }
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            @(string.IsNullOrEmpty(round.Description) ? "No special instructions provided. Please be present on time." : round.Description)
+                        </p>
+
+                        <div class="bg-light p-3 rounded-3 small">
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span><i class="bi bi-calendar-check me-1"></i>Date & Time:</span>
+                                <strong class="text-dark">@round.RoundDate.ToString("dd MMMM yyyy, hh:mm tt") UTC</strong>
+                            </div>
+                            @if (result != null && result.Score.HasValue)
+                            {
+                                <div class="d-flex justify-content-between py-1 text-muted">
+                                    <span><i class="bi bi-speedometer2 me-1"></i>Score Obtained:</span>
+                                    <strong class="text-primary">@result.Score.Value.ToString("F1") / 100</strong>
+                                </div>
+                            }
+                            @if (result != null && !string.IsNullOrEmpty(result.Remarks))
+                            {
+                                <div class="d-flex justify-content-between py-1 text-muted border-top mt-1 pt-1">
+                                    <span><i class="bi bi-chat-quote me-1"></i>Evaluator Remarks:</span>
+                                    <strong class="text-dark">@result.Remarks</strong>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="modern-card text-center py-5">
+            <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">No interviews scheduled yet</h4>
+            <p class="text-muted small mb-3">When you are shortlisted for placement drives, your interview rounds and schedules will appear here.</p>
+            <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-primary px-4 fw-semibold">
+                Explore Placement Drives
+            </a>
+        </div>
+    }
+</div>

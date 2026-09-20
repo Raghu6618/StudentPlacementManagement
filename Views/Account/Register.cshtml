@@ -1,0 +1,110 @@
+@model StudentPlacementManagement.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Student Registration";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="bg-primary text-white py-4 px-4" style="background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 rounded-circle bg-white bg-opacity-10">
+                            <i class="bi bi-person-plus-fill fs-2 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-1">Student Portal Registration</h3>
+                            <p class="text-light text-opacity-75 small mb-0">Join the campus placement system to explore company drives</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show small" role="alert">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Academic Identity</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="EnrollmentNo" class="form-label fw-semibold small text-secondary">Enrollment / Roll No <span class="text-danger">*</span></label>
+                                <input asp-for="EnrollmentNo" class="form-control" placeholder="e.g. 2022CSE0199" required />
+                                <span asp-validation-for="EnrollmentNo" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DepartmentId" class="form-label fw-semibold small text-secondary">Department / Branch <span class="text-danger">*</span></label>
+                                <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments" required>
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="PassingYear" class="form-label fw-semibold small text-secondary">Graduation / Passing Year <span class="text-danger">*</span></label>
+                                <input asp-for="PassingYear" type="number" class="form-control" placeholder="e.g. 2026" required />
+                                <span asp-validation-for="PassingYear" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label fw-semibold small text-secondary">Mobile Number</label>
+                                <input asp-for="Phone" class="form-control" placeholder="+91 98765 43210" />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Personal & Login Details</h5>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label fw-semibold small text-secondary">First Name <span class="text-danger">*</span></label>
+                                <input asp-for="FirstName" class="form-control" placeholder="First Name" required />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label fw-semibold small text-secondary">Last Name <span class="text-danger">*</span></label>
+                                <input asp-for="LastName" class="form-control" placeholder="Last Name" required />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold small text-secondary">Institutional / Personal Email <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="student@apex.edu" required />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label fw-semibold small text-secondary">Password <span class="text-danger">*</span></label>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Minimum 6 characters" required />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label fw-semibold small text-secondary">Confirm Password <span class="text-danger">*</span></label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Re-type password" required />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm" style="background: #4f46e5; border-color: #4f46e5;">
+                                Complete Student Registration <i class="bi bi-check2-circle ms-1"></i>
+                            </button>
+                        </div>
+
+                        <div class="text-center small text-muted">
+                            Already registered? <a asp-action="Login" class="text-primary fw-bold text-decoration-none">Sign In to Portal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

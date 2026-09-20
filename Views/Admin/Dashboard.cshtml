@@ -1,0 +1,493 @@
+@model StudentPlacementManagement.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Placement Cell Dashboard";
+}
+
+<div class="container-fluid px-0">
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Placement Administration Dashboard</h2>
+            <p class="text-muted small mb-0">Overview of campus recruitment drives, student selections, and real-time department statistics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="PlacementDrive" asp-action="Create" class="btn btn-primary-custom">
+                <i class="bi bi-plus-circle-fill me-1"></i> New Placement Drive
+            </a>
+            <a asp-controller="Report" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-download me-1"></i> Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Total Students</span>
+                    <div class="stat-icon stat-icon-indigo">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.TotalStudents</div>
+                <div class="stat-subtext text-success">
+                    <i class="bi bi-mortarboard"></i> Across @Model.DeptNames.Count Departments
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Placement Rate</span>
+                    <div class="stat-icon stat-icon-emerald">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.PlacementPercentage%</div>
+                <div class="stat-subtext">
+                    <span class="text-success fw-bold">@Model.PlacedStudents Placed</span> / @Model.UnplacedStudents Unplaced
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Active Drives</span>
+                    <div class="stat-icon stat-icon-amber">
+                        <i class="bi bi-briefcase-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@Model.ActiveDrives</div>
+                <div class="stat-subtext">
+                    <span class="text-primary fw-semibold">@Model.TotalApplications Total Applications</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Highest Package</span>
+                    <div class="stat-icon stat-icon-sky">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₹@Model.HighestPackage.ToString("F1") <span style="font-size: 1rem; font-weight: 600; color: #64748b;">LPA</span></div>
+                <div class="stat-subtext">
+                    Average: <strong class="text-dark">₹@Model.AveragePackage.ToString("F1") LPA</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Charts Section -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 1: Department Placement Comparison -->
+        <div class="col-12 col-lg-8">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-bar-chart-fill text-primary"></i> Department-Wise Placement Ratio
+                    </h5>
+                    <span class="badge bg-light text-muted border">Current Academic Batch</span>
+                </div>
+                <div class="modern-card-body">
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="deptPlacementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Placement Doughnut (Placed vs Unplaced) -->
+        <div class="col-12 col-lg-4">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-pie-chart-fill text-success"></i> Placement Status
+                    </h5>
+                    <span class="badge bg-success-subtle text-success">Overall</span>
+                </div>
+                <div class="modern-card-body d-flex flex-column align-items-center justify-content-center">
+                    <div style="height: 240px; width: 100%; position: relative;">
+                        <canvas id="placementStatusChart"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-around w-100 mt-3 pt-2 border-top">
+                        <div class="text-center">
+                            <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #10b981;"></span>
+                            <span class="small text-muted">Placed:</span>
+                            <strong class="d-block text-dark">@Model.PlacedStudents</strong>
+                        </div>
+                        <div class="text-center">
+                            <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #e2e8f0;"></span>
+                            <span class="small text-muted">Unplaced:</span>
+                            <strong class="d-block text-dark">@Model.UnplacedStudents</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Charts Row -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 3: Top Recruiting Companies -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-building-check text-info"></i> Top Recruiting Companies (Offers)
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="companyOffersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Monthly Placement Trend -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-graph-up-arrow text-primary"></i> Monthly Recruitment Trend
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Drives & Recent Applications Rows -->
+    <div class="row g-3 mb-4">
+        <!-- Recent Drives -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-briefcase text-primary"></i> Active & Recent Placement Drives
+                    </h5>
+                    <a asp-controller="PlacementDrive" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Company & Role</th>
+                                <th>Package</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentDrives.Any())
+                            {
+                                foreach (var drive in Model.RecentDrives)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark">@drive.JobRole</div>
+                                            <small class="text-muted">@drive.Company?.CompanyName</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">₹@drive.SalaryPackage.ToString("F2") LPA</span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-@(drive.Status.ToLower())">@drive.Status</span>
+                                        </td>
+                                        <td>
+                                            <a asp-controller="PlacementDrive" asp-action="Details" asp-route-id="@drive.DriveId" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                                Manage
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No placement drives found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-file-earmark-check text-primary"></i> Recent Candidate Applications
+                    </h5>
+                    <a asp-controller="Application" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Review All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Drive Applied</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentApplications.Any())
+                            {
+                                foreach (var app in Model.RecentApplications)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold text-dark">@app.Student?.FullName</div>
+                                            <small class="text-muted">@app.Student?.EnrollmentNo (@app.Student?.Department?.DepartmentCode)</small>
+                                        </td>
+                                        <td>
+                                            <div class="small fw-semibold text-dark">@app.PlacementDrive?.Company?.CompanyName</div>
+                                            <small class="text-muted">@app.PlacementDrive?.JobRole</small>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-@(app.Status.ToLower())">@app.Status</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@app.AppliedDate.ToString("dd MMM")</small>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No student applications submitted yet.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently Placed & Upcoming Interviews -->
+    <div class="row g-3">
+        <!-- Recently Placed Students -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-trophy-fill text-warning"></i> Recently Placed Students
+                    </h5>
+                    <a asp-controller="Placement" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">All Placements</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Placed Company</th>
+                                <th>Package</th>
+                                <th>Offer Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentlyPlacedStudents.Any())
+                            {
+                                foreach (var p in Model.RecentlyPlacedStudents)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark">@p.Student?.FullName</div>
+                                            <small class="text-muted">@p.Student?.EnrollmentNo</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">@p.Company?.CompanyName</span>
+                                            <small class="d-block text-muted">@p.JobRole</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success fw-bold">₹@p.SalaryPackage.ToString("F2") LPA</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@p.PlacementDate.ToString("dd MMM yyyy")</small>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">No placements finalized yet.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Interview Rounds -->
+        <div class="col-12 col-lg-6">
+            <div class="modern-card h-100">
+                <div class="modern-card-header">
+                    <h5 class="modern-card-title">
+                        <i class="bi bi-calendar2-check-fill text-info"></i> Upcoming Interview Rounds
+                    </h5>
+                </div>
+                <div class="modern-card-body p-0">
+                    @if (Model.UpcomingRounds.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var round in Model.UpcomingRounds)
+                            {
+                                <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark">@round.RoundName (Round #@round.RoundNumber)</div>
+                                        <small class="text-muted">@round.PlacementDrive?.Company?.CompanyName - @round.PlacementDrive?.JobRole</small>
+                                        <div class="small text-primary mt-1">
+                                            <i class="bi bi-clock me-1"></i>@round.RoundDate.ToString("dd MMM yyyy, hh:mm tt") UTC
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a asp-controller="Interview" asp-action="Grading" asp-route-roundId="@round.RoundId" class="btn btn-sm btn-outline-primary">
+                                            Evaluate Candidates
+                                        </a>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">No scheduled rounds found.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Department Placement Comparison Bar Chart
+        const deptCtx = document.getElementById('deptPlacementChart');
+        if (deptCtx) {
+            new Chart(deptCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DeptNames)),
+                    datasets: [
+                        {
+                            label: 'Placed Students',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DeptPlacedCounts)),
+                            backgroundColor: '#4f46e5',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Total Registered',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DeptTotalCounts)),
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 2. Placement Status Doughnut Chart
+        const statusCtx = document.getElementById('placementStatusChart');
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Placed', 'Unplaced'],
+                    datasets: [{
+                        data: [@Model.PlacedStudents, @Model.UnplacedStudents],
+                        backgroundColor: ['#10b981', '#e2e8f0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // 3. Top Companies by Selections
+        const compCtx = document.getElementById('companyOffersChart');
+        if (compCtx) {
+            new Chart(compCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CompanyNames)),
+                    datasets: [{
+                        label: 'Selections / Offers',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CompanyOfferCounts)),
+                        backgroundColor: '#06b6d4',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // 4. Monthly Recruitment Trend
+        const trendCtx = document.getElementById('monthlyTrendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendMonths)),
+                    datasets: [{
+                        label: 'Offers Accepted',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendPlacedCounts)),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#4f46e5',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    });
+</script>
+}
