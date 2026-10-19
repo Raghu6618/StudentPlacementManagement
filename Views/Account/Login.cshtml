@@ -81,9 +81,12 @@
     </div>
 </div>
 
-<script>
-    function fillCredentials(email, password) {
-        document.getElementById("loginEmailInput").value = email;
-        document.getElementById("loginPasswordInput").value = password;
-    }
-</script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function fillCredentials(email, password) {
+            document.getElementById("loginEmailInput").value = email;
+            document.getElementById("loginPasswordInput").value = password;
+        }
+    </script>
+}

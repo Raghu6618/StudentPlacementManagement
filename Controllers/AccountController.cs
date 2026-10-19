@@ -58,7 +58,7 @@ namespace StudentPlacementManagement.Controllers
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: true);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User {Email} logged in successfully.", user.Email);
@@ -69,6 +69,13 @@ namespace StudentPlacementManagement.Controllers
                 }
 
                 return await RedirectBasedOnRoleAsync(user);
+            }
+
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User {Email} account locked out due to multiple failed login attempts.", user.Email);
+                ModelState.AddModelError(string.Empty, "This account has been temporarily locked out due to multiple failed login attempts. Please try again after 10 minutes.");
+                return View(model);
             }
 
             ModelState.AddModelError(string.Empty, "Invalid login credentials. Please try again.");

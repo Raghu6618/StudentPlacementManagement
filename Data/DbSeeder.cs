@@ -25,25 +25,30 @@ namespace StudentPlacementManagement.Data
 
             // 2. Seed Default Admin
             var adminEmail = configuration["ApplicationSettings:DefaultAdminEmail"] ?? "admin@placement.edu";
-            var adminPassword = configuration["ApplicationSettings:DefaultAdminPassword"] ?? "Admin@123";
+            var adminPassword = configuration["ApplicationSettings:DefaultAdminPassword"] 
+                ?? configuration["ADMIN_PASSWORD"] 
+                ?? Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
 
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
             {
-                adminUser = new ApplicationUser
+                if (!string.IsNullOrWhiteSpace(adminPassword))
                 {
-                    UserName = adminEmail,
-                    Email = adminEmail,
-                    EmailConfirmed = true,
-                    FullName = "Placement Officer (Admin)",
-                    UserRole = "Admin",
-                    CreatedAt = DateTime.UtcNow
-                };
+                    adminUser = new ApplicationUser
+                    {
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                        EmailConfirmed = true,
+                        FullName = "Placement Officer (Admin)",
+                        UserRole = "Admin",
+                        CreatedAt = DateTime.UtcNow
+                    };
 
-                var createAdminResult = await userManager.CreateAsync(adminUser, adminPassword);
-                if (createAdminResult.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                    var createAdminResult = await userManager.CreateAsync(adminUser, adminPassword);
+                    if (createAdminResult.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
                 }
             }
 

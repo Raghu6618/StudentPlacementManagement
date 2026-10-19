@@ -267,9 +267,10 @@ namespace StudentPlacementManagement.Controllers
             }
 
             var cleanPath = student.ResumePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var filePath = Path.Combine(_environment.WebRootPath, cleanPath);
+            var filePath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, cleanPath));
+            var uploadsBase = Path.GetFullPath(Path.Combine(_environment.WebRootPath, "uploads", "resumes"));
 
-            if (!System.IO.File.Exists(filePath))
+            if (!filePath.StartsWith(uploadsBase, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(filePath))
             {
                 return NotFound("File does not exist on disk.");
             }
@@ -279,7 +280,8 @@ namespace StudentPlacementManagement.Controllers
             if (ext == ".doc") contentType = "application/msword";
             else if (ext == ".docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-            return PhysicalFile(filePath, contentType, student.ResumeFileName ?? "Student_Resume.pdf");
+            var downloadFileName = Path.GetFileName(student.ResumeFileName ?? "Student_Resume.pdf");
+            return PhysicalFile(filePath, contentType, downloadFileName);
         }
 
         // Admin: Student directory

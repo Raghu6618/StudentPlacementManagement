@@ -11,9 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // 2. Configure Entity Framework Core Database Provider
-var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
+var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SqlServer";
 var sqlServerConnection = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=StudentPlacementManagementDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    ?? "Server=(localdb)\\MSSQLLocalDB;Database=StudentPlacementManagementDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true";
 var sqliteConnection = builder.Configuration.GetConnectionString("SqliteConnection") 
     ?? "Data Source=StudentPlacementManagement.db";
 
@@ -31,12 +31,16 @@ if (!useSqlite)
     }
     catch
     {
+        // If SQL Server is unreachable or LocalDB runtime is not present, gracefully fall back to SQLite for demo portability
         useSqlite = true;
     }
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
+    options.ConfigureWarnings(warnings => 
+        warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
     if (useSqlite)
     {
         options.UseSqlite(sqliteConnection, sqliteOptions =>
@@ -74,6 +78,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
     options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders()

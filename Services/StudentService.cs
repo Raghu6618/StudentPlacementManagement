@@ -118,6 +118,12 @@ namespace StudentPlacementManagement.Services
                 return (false, null, null, $"Invalid file format. Allowed extensions: {string.Join(", ", allowedExts)}");
             }
 
+            // Validate file content signature (magic bytes) to prevent disguised files
+            if (!IsValidFileSignature(file, ext))
+            {
+                return (false, null, null, "File content does not match the expected document format.");
+            }
+
             // Target uploads directory
             var uploadsDir = Path.Combine(_environment.WebRootPath, "uploads", "resumes");
             if (!Directory.Exists(uploadsDir))
@@ -125,11 +131,13 @@ namespace StudentPlacementManagement.Services
                 Directory.CreateDirectory(uploadsDir);
             }
 
-            // Remove previous resume if exists
+            // Remove previous resume if exists safely
             if (!string.IsNullOrEmpty(student.ResumePath))
             {
-                var existingFilePath = Path.Combine(_environment.WebRootPath, student.ResumePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                if (File.Exists(existingFilePath))
+                var cleanExisting = student.ResumePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                var existingFilePath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, cleanExisting));
+                var fullUploadsBase = Path.GetFullPath(uploadsDir);
+                if (existingFilePath.StartsWith(fullUploadsBase, StringComparison.OrdinalIgnoreCase) && File.Exists(existingFilePath))
                 {
                     try { File.Delete(existingFilePath); } catch { /* ignore if locked */ }
                 }
@@ -144,12 +152,58 @@ namespace StudentPlacementManagement.Services
             }
 
             var relativePath = $"/uploads/resumes/{safeFileName}";
-            student.ResumeFileName = file.FileName;
+            var sanitizedOriginalFileName = Path.GetFileName(file.FileName);
+            student.ResumeFileName = sanitizedOriginalFileName;
             student.ResumePath = relativePath;
             student.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return (true, file.FileName, relativePath, null);
+            return (true, sanitizedOriginalFileName, relativePath, null);
+        }
+
+        private static bool IsValidFileSignature(IFormFile file, string ext)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var reader = new BinaryReader(stream);
+                var headerBytes = reader.ReadBytes(8);
+                if (headerBytes.Length < 4) return false;
+
+                if (ext == ".pdf")
+                {
+                    // %PDF
+                    return headerBytes[0] == 0x25 &&
+                           headerBytes[1] == 0x50 &&
+                           headerBytes[2] == 0x44 &&
+                           headerBytes[3] == 0x46;
+                }
+
+                if (ext == ".doc")
+                {
+                    // OLECF header: D0 CF 11 E0 A1 B1 1A E1
+                    return headerBytes.Length >= 8 &&
+                           headerBytes[0] == 0xD0 && headerBytes[1] == 0xCF &&
+                           headerBytes[2] == 0x11 && headerBytes[3] == 0xE0 &&
+                           headerBytes[4] == 0xA1 && headerBytes[5] == 0xB1 &&
+                           headerBytes[6] == 0x1A && headerBytes[7] == 0xE1;
+                }
+
+                if (ext == ".docx")
+                {
+                    // ZIP header: PK\x03\x04
+                    return headerBytes[0] == 0x50 &&
+                           headerBytes[1] == 0x4B &&
+                           (headerBytes[2] == 0x03 || headerBytes[2] == 0x05 || headerBytes[2] == 0x07) &&
+                           (headerBytes[3] == 0x04 || headerBytes[3] == 0x06 || headerBytes[3] == 0x08);
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

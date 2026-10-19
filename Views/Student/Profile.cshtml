@@ -22,7 +22,7 @@
             <!-- Student Summary Card -->
             <div class="modern-card mb-4 text-center p-4">
                 <div class="user-avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
-                    @Model.FirstName.Substring(0, 1).ToUpper()
+                    @(!string.IsNullOrWhiteSpace(Model.FirstName) ? Model.FirstName[..1].ToUpper() : (!string.IsNullOrWhiteSpace(Model.FullName) ? Model.FullName[..1].ToUpper() : "S"))
                 </div>
                 <h4 class="fw-bold text-dark mb-1">@Model.FullName</h4>
                 <p class="text-muted small mb-2">@Model.EnrollmentNo</p>

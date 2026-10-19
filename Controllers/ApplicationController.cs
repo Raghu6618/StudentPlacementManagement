@@ -19,6 +19,7 @@ namespace StudentPlacementManagement.Controllers
         private readonly IStudentService _studentService;
         private readonly IPlacementService _placementService;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<ApplicationController> _logger;
 
         public ApplicationController(
             ApplicationDbContext context,
@@ -26,7 +27,8 @@ namespace StudentPlacementManagement.Controllers
             IEligibilityService eligibilityService,
             IStudentService studentService,
             IPlacementService placementService,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ILogger<ApplicationController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -34,6 +36,7 @@ namespace StudentPlacementManagement.Controllers
             _studentService = studentService;
             _placementService = placementService;
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         [Authorize(Roles = "Admin")]
@@ -222,19 +225,42 @@ namespace StudentPlacementManagement.Controllers
 
             _context.Applications.Add(application);
 
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // In concurrent double-submissions, database unique constraint on (DriveId, StudentId) prevents duplicate
+                var alreadyApplied = await _context.Applications
+                    .AsNoTracking()
+                    .AnyAsync(a => a.DriveId == driveId && a.StudentId == student.StudentId);
+
+                if (alreadyApplied)
+                {
+                    _logger.LogWarning("Duplicate application submission intercepted for StudentId {StudentId} and DriveId {DriveId}.", student.StudentId, driveId);
+                    TempData["WarningMessage"] = "You have already applied to this placement drive.";
+                    return RedirectToAction("Details", "PlacementDrive", new { id = driveId });
+                }
+
+                _logger.LogError(ex, "Database error during application submission for StudentId {StudentId} and DriveId {DriveId}.", student.StudentId, driveId);
+                throw;
+            }
+
             var drive = await _context.PlacementDrives
                 .Include(d => d.Company)
                 .FirstOrDefaultAsync(d => d.DriveId == driveId);
 
-            // Send confirmation notification
-            await _notificationService.SendNotificationAsync(
-                userId,
-                "Application Submitted Successfully",
-                $"Your application for {drive?.JobRole} at {drive?.Company?.CompanyName} has been submitted successfully.",
-                "Application"
-            );
-
-            await _context.SaveChangesAsync();
+            // Send confirmation notification after successful database write
+            if (drive != null)
+            {
+                await _notificationService.SendNotificationAsync(
+                    userId,
+                    "Application Submitted Successfully",
+                    $"Your application for {drive.JobRole} at {drive.Company?.CompanyName} has been submitted successfully.",
+                    "Application"
+                );
+            }
 
             TempData["SuccessMessage"] = $"Your application for '{drive?.JobRole}' at {drive?.Company?.CompanyName} has been submitted successfully!";
             return RedirectToAction(nameof(MyApplications));
